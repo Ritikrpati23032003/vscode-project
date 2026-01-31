@@ -14,6 +14,10 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server, {
   path: "/socket.io",
+  cors: {
+    origin: "*",        // or "http://3.85.118.200"
+    methods: ["GET", "POST"],
+  },
 });
 
 // Connect to MongoDB
