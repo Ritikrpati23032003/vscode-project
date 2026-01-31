@@ -79,7 +79,7 @@ function CodeSpacePage() {
   // Main effect to check the room's status on initial load
   useEffect(() => {
     // Stage 1: Check if the room is public or private
-    
+
     fetch(`${API_URL}/api/codespaces/${spaceName}/status`)
       .then(res => {
         if (!res.ok) throw new Error('Codespace not found.');
@@ -120,7 +120,26 @@ function CodeSpacePage() {
         setActiveFile(prev => ({ ...prev, content }));
       }
     });
+
     socket.on('file-created', (newFileList) => setFiles(newFileList));
+
+    socket.on('file-deleted', ({ fileName, files: updatedFiles }) => {
+      // Update files list with the new file list from server
+      setFiles(updatedFiles);
+
+      // Remove from open tabs if it was open
+      setOpenFiles(prev => prev.filter(f => f.name !== fileName));
+
+      // If the deleted file was active, switch to another open file or null
+      setActiveFile(prev => {
+        if (prev?.name === fileName) {
+          const remainingOpenFiles = openFiles.filter(f => f.name !== fileName);
+          return remainingOpenFiles.length > 0 ? remainingOpenFiles[0] : null;
+        }
+        return prev;
+      });
+    });
+
     socket.on('privacy-updated', ({ isPublic }) => setIsPublic(isPublic));
   };
   const handleDelete = async (file) => {

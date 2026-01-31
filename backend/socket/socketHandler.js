@@ -7,11 +7,11 @@ const path = require('path');
 
 const initializeSocket = (io) => {
     io.on('connection', (socket) => {
-        console.log(`User connected: ${socket.id}`);
+        // console.log(`User connected: ${socket.id}`);
 
         socket.on('join-space', async ({ spaceName }) => {
             socket.join(spaceName);
-            console.log(`${socket.id} joined space: ${spaceName}`);
+            // console.log(`${socket.id} joined space: ${spaceName}`);
             // Let others in the room know a new user has joined
             socket.to(spaceName).emit('user-joined', { userId: socket.id });
         });
@@ -42,6 +42,21 @@ const initializeSocket = (io) => {
                 io.to(spaceName).emit('file-created', updatedCodespace.files);
             }
         });
+
+        // Listen for file deletion
+        socket.on('delete-file', async ({ spaceName, fileName }) => {
+            const updatedCodespace = await Codespace.findOneAndUpdate(
+                { name: spaceName },
+                { $pull: { files: { name: fileName } } },
+                { new: true }
+            );
+
+            if (updatedCodespace) {
+                // Notify all clients in the room about the file deletion
+                io.to(spaceName).emit('file-deleted', { fileName, files: updatedCodespace.files });
+            }
+        });
+
         socket.on('privacy-change', ({ spaceName, isPublic, hasPasscode }) => {
             // Broadcast the change to everyone in the room
             socket.to(spaceName).emit('privacy-updated', { isPublic, hasPasscode });
@@ -77,7 +92,7 @@ const initializeSocket = (io) => {
         });
 
         socket.on('disconnect', () => {
-            console.log(`User disconnected: ${socket.id}`);
+            // console.log(`User disconnected: ${socket.id}`);
         });
     });
 };

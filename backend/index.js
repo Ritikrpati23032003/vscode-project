@@ -13,10 +13,7 @@ app.use(express.json());
 
 const server = http.createServer(app);
 const io = new Server(server, {
-    cors: {
-        origin: ["http://localhost:5173","https://vscode-ibox.onrender.com"], // Your React app's URL
-        methods: ["GET", "POST"]
-    }
+  path: "/socket.io",
 });
 
 // Connect to MongoDB
@@ -24,13 +21,11 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected : ', mongoose.connection.host))
     .catch(err => console.error(err));
 
-// API Routes
-app.use('/api/codespaces', codespaceApiRoutes);
-app.get('/', (req,res)=>{
-    res.send("Api is running.................")
-})
-// Initialize Socket.io logic
+// Initialize Socket.io logic first
 initializeSocket(io);
 
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+// API Routes - pass io instance for real-time events
+app.use('/api/codespaces', codespaceApiRoutes(io));
+
+const PORT = process.env.PORT || 5000;
+server.listen(PORT,"0.0.0.0", () => console.log(`Server is running on port ${PORT}`));
