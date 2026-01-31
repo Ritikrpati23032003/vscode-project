@@ -5,7 +5,7 @@ const AppContext = createContext(null);
 export const AppProvider = ({ children }) => {
   // Same-origin URLs (Nginx reverse proxy)
   const SOCKET_URL = "http://3.85.118.200:5000";
-  const API_URL = "http://3.85.118.200:5000/api";
+  const API_URL = "http://3.85.118.200:5000";
 
   const [verified, setVerified] = useState(false);
 
